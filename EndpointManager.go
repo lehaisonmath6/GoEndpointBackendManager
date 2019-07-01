@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,12 +24,18 @@ type EndPointManager struct {
 
 // GetEndPoint get random endpoint from endpoints
 func (e *EndPointManager) GetEndPoint() (error, *EndPoint) {
-	return nil, nil
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s)
+	index := r.Intn(len(e.endPoints))
+	return nil, e.endPoints[index]
 }
 
 // GetEndPoints get all endpoint from etcd and base path
 func (e *EndPointManager) GetEndPoints() (error, []*EndPoint) {
-	return nil, nil
+	if e.endPoints == nil {
+		return errors.New("Enpoind nil"), nil
+	}
+	return nil, e.endPoints
 }
 
 // LoadEndpoint load all endpoint from etcd and base path
