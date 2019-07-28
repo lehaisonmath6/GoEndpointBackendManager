@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	enpManager := backendmanager.NewEndPointManager("http://127.0.0.1:2379", "/openstars/services/api/zshare/zsmetadataservice")
+	enpManager := backendmanager.NewEndPointManager("http://127.0.0.1:2379", "/server-monitor/openstars/services/api/zshare/zsmetadataservice")
 	enpManager.LoadEndpoint()
 	err, lsEnpoints := enpManager.GetEndPoints()
 	if err != nil {
@@ -16,10 +16,10 @@ func main() {
 	}
 	CompactEndpoint := new(backendmanager.EndPoint)
 	for i := 0; i < len(lsEnpoints); i++ {
+		log.Println(lsEnpoints[i])
 		if lsEnpoints[i].Type == backendmanager.EThriftCompact {
 			CompactEndpoint = lsEnpoints[i]
 		}
 	}
 	fmt.Println("Compact host : ", CompactEndpoint.Host, " , port : ", CompactEndpoint.Port)
-	log.Println(lsEnpoints)
 }
