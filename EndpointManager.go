@@ -38,6 +38,15 @@ func (e *EndPointManager) GetEndPoints() (error, []*EndPoint) {
 	return nil, e.endPoints
 }
 
+func (e *EndPointManager) GetEndPointType(t TType) (error, *EndPoint) {
+	for i := 0; i < len(e.endPoints); i++ {
+		if e.endPoints[i].Type == t {
+			return nil, e.endPoints[i]
+		}
+	}
+	return errors.New("Can not found endpoint service"), nil
+}
+
 // LoadEndpoint load all endpoint from etcd and base path
 func (e *EndPointManager) LoadEndpoint() error {
 
