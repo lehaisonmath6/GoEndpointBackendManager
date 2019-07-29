@@ -1,19 +1,29 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
 	backendmanager "github.com/OpenStars/GoEndpointBackendManager"
 )
 
+func ObChangeEndpoint(ep *backendmanager.EndPoint) {
+	fmt.Println(ep)
+	//udate host port hear
+}
+
 func main() {
-	enpManager := backendmanager.NewEndPointManager("http://127.0.0.1:2379", "/openstars/services/api/zshare/zsmetadataservice")
-	enpManager.LoadEndpoint()
-	err, ep := enpManager.GetEndPointType(backendmanager.EThriftCompact)
-	if err != nil {
-		log.Fatalln(err.Error())
+	enpManager := backendmanager.NewEndPointManager("http://127.0.0.1:2379", "/dir1")
+	enpManager.TestConnectEtcdServer()
+	enpManager.EventChangeEndPoints(ObChangeEndpoint)
+	for {
+
 	}
-	log.Println("host:", ep.Host, "; port:", ep.Port)
+	// enpManager.LoadEndpoint()
+	// err, ep := enpManager.GetEndPointType(backendmanager.EThriftCompact)
+	// if err != nil {
+	// 	log.Fatalln(err.Error())
+	// }
+	// log.Println("host:", ep.Host, "; port:", ep.Port)
 	// err, lsEnpoints := enpManager.GetEndPoints(typ)
 	// if err != nil {
 	// 	log.Println(err.Error())

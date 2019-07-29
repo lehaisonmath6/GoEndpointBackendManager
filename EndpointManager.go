@@ -14,6 +14,8 @@ import (
 	etcdclient "go.etcd.io/etcd/client"
 )
 
+type FncProcessEventChange func(ep *EndPoint)
+
 type EndPointManager struct {
 	mux          sync.Mutex
 	etcdServer   string
@@ -83,6 +85,7 @@ func (e *EndPointManager) doLoadEndpoint() error {
 	for i := 0; i < rs.Node.Nodes.Len(); i++ {
 		epPath := rs.Node.Nodes[i].Key
 		epValue := rs.Node.Nodes[i].Value
+
 		fmt.Println("enpoint path key :", epPath, "enpoint value :", epValue)
 		err, ep := e.parseEndpoint(epPath)
 		if err != nil {
@@ -117,7 +120,7 @@ func (e *EndPointManager) parseEndpoint(endPointPath string) (error, *EndPoint) 
 	ep.Type = StringToTType(token[0])
 	ep.Host = token[1]
 	ep.Port = port
-
+	ep.EnpointFullPath = endPointPath
 	return nil, &ep
 }
 
@@ -134,6 +137,41 @@ func (e *EndPointManager) replaceAll(listEndPoints []*EndPoint) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	e.endPoints = listEndPoints
+}
+
+func (e *EndPointManager) EventChangeEndPoints(fn FncProcessEventChange) {
+	watch := e.etcdApi.Watcher(e.etcdBasePath, &etcdclient.WatcherOptions{AfterIndex: 0, Recursive: true})
+	go func() {
+		for {
+			res, err := watch.Next(context.Background())
+			if err != nil {
+				return
+			}
+			err, ep := e.parseEndpoint(res.Node.Key)
+			if err != nil {
+				continue
+			}
+			fn(ep)
+		}
+	}()
+
+}
+
+func (e *EndPointManager) TestConnectEtcdServer() error {
+	cfg := etcdclient.Config{
+		Endpoints:               []string{e.etcdServer},
+		Transport:               etcdclient.DefaultTransport,
+		HeaderTimeoutPerRequest: time.Second,
+	}
+	c, err := etcdclient.New(cfg)
+	if err != nil {
+		return err
+	}
+	if c == nil {
+		return errors.New("Can not connect to etcd")
+	}
+	e.etcdApi = etcdclient.NewKeysAPI(c)
+	return nil
 }
 
 func NewEndPointManager(aServer, aPath string) *EndPointManager {
